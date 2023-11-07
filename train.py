@@ -83,7 +83,7 @@ parser = argparse.ArgumentParser()
 ying*************************************************************************************************
 change the parset options of code
 '''
-parser.add_argument('--data_path', default="D:/zy/project/virtual_staining/data/kidney_trans/", type=str,
+parser.add_argument('--data_path', default="D:/vit_gan_transfer/dataset_test/kidney_trans/", type=str,
                     help='Directory path to a batch of content & style images')
 
 # Basic options
