@@ -246,7 +246,7 @@ if __name__ == "__main__":
         ying****************************************************************************************
         change the loss function
         '''
-        out, loss_c, loss_s, l_identity1, l_identity2 = network(
+        out, loss_c, loss_s, l_identity1, l_identity2, l_l1 = network(
             content_images, style_images)
 
         if i % 10 == 0:
@@ -276,9 +276,9 @@ if __name__ == "__main__":
 
         loss_c = args.content_weight * loss_c
         loss_s = args.style_weight * loss_s
-        loss = loss_c + loss_s + (l_identity1 * 1) + (l_identity2 * 1)
+        loss = loss_c + loss_s + (l_identity1 * 1) + (l_identity2 * 1) + l_l1
 
-        print(loss.sum().cpu().detach().numpy(), "-content:", loss_c.sum().cpu().detach().numpy(), "-style:", loss_s.sum().cpu().detach().numpy(), "-l1:", l_identity1.sum().cpu().detach().numpy(), "-l2:", l_identity2.sum().cpu().detach().numpy()
+        print(loss.sum().cpu().detach().numpy(), "-content:", loss_c.sum().cpu().detach().numpy(), "-style:", loss_s.sum().cpu().detach().numpy(), "-l1:", l_identity1.sum().cpu().detach().numpy(), "-l2:", l_identity2.sum().cpu().detach().numpy(), "-paired image", l_l1.sum().cpu().detach().numpy()
               )
 
         optimizer.zero_grad()
@@ -306,6 +306,7 @@ if __name__ == "__main__":
         writer.add_scalar('loss_style', loss_s.sum().item(), i + 1)
         writer.add_scalar('loss_identity1', l_identity1.sum().item(), i + 1)
         writer.add_scalar('loss_identity2', l_identity2.sum().item(), i + 1)
+        writer.add_scalar('loss_pairedimage', l_l1.sum().item(), i + 1)
         writer.add_scalar('total_loss', loss.sum().item(), i + 1)
 
         if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:

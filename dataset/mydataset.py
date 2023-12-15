@@ -131,7 +131,7 @@ class KidneyDataset(data.Dataset):
         style_path = self.styles_path[idx]
         # content = cv2.imread(content_path, flags=cv2.IMREAD_COLOR)
         content = Image.open(content_path).convert('RGB')
-        print(content_path)
+        # print(content_path)
         assert content is not None, f"failed to read content: {content_path}"
         # content = cv2.cvtColor(content, cv2.COLOR_BGR2RGB)  # BGR -> RGB
         # content = np.transpose(content, (2, 0, 1))
@@ -149,7 +149,7 @@ class KidneyDataset(data.Dataset):
         # style = cv2.imread(style_path, flags=cv2.IMREAD_COLOR)
         # style = cv2.cvtColor(style, cv2.COLOR_BGR2RGB)  # BGR -> RGB
         style = Image.open(style_path).convert('RGB')
-        print(style_path)
+        # print(style_path)
         assert style is not None, f"failed to read style: {style_path}"
         style = transform1(style)
 

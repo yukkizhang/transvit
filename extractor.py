@@ -1,6 +1,7 @@
 import torch
-import models.StyTR  as StyTR 
+import models.StyTR as StyTR
 import models.transformer as transformer
+
 
 def attn_cosine_sim(x, eps=1e-08):
     x = x[0]  # TEMP: getting rid of redundant dimension, TBF
@@ -16,6 +17,7 @@ need to change--1. the model dino -> styTR 2. the layers (find keys to get the r
 maybe need to the full model network or generator network, because only when the image sent to the network can we get the feature map to calculate loss
 '''
 
+
 class VitExtractor:
     BLOCK_KEY = 'block'
     ATTN_KEY = 'attn'
@@ -23,7 +25,8 @@ class VitExtractor:
     QKV_KEY = 'qkv'
     KEY_LIST = [BLOCK_KEY, ATTN_KEY, PATCH_IMD_KEY, QKV_KEY]
 
-    def __init__(self, model_name, device):
+    def __init__(self, device):
+        # def __init__(self, model_name, device):
 
         # vgg = StyTR.vgg
         # vgg.load_state_dict(torch.load(args.vgg))
@@ -35,10 +38,10 @@ class VitExtractor:
         Trans = transformer.Transformer()
         # with torch.no_grad():
         #     network = StyTR.StyTrans(decoder,embedding, Trans)
-        self.model = StyTR.StyTrans(decoder,embedding, Trans)
+        self.model = StyTR.StyTrans(decoder, embedding, Trans)
         # self.model = torch.hub.load('facebookresearch/dino:main', model_name).to(device)
         self.model.eval()
-        self.model_name = model_name
+        # self.model_name = model_name
         self.hook_handlers = []
         self.layers_dict = {}
         self.outputs_dict = {}
@@ -48,10 +51,14 @@ class VitExtractor:
         self._init_hooks_data()
 
     def _init_hooks_data(self):
-        self.layers_dict[VitExtractor.BLOCK_KEY] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        self.layers_dict[VitExtractor.ATTN_KEY] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        self.layers_dict[VitExtractor.QKV_KEY] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        self.layers_dict[VitExtractor.PATCH_IMD_KEY] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        self.layers_dict[VitExtractor.BLOCK_KEY] = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        self.layers_dict[VitExtractor.ATTN_KEY] = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        self.layers_dict[VitExtractor.QKV_KEY] = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        self.layers_dict[VitExtractor.PATCH_IMD_KEY] = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         for key in VitExtractor.KEY_LIST:
             # self.layers_dict[key] = kwargs[key] if key in kwargs.keys() else []
             self.outputs_dict[key] = []
@@ -62,13 +69,17 @@ class VitExtractor:
 
         for block_idx, block in enumerate(self.model.blocks):
             if block_idx in self.layers_dict[VitExtractor.BLOCK_KEY]:
-                self.hook_handlers.append(block.register_forward_hook(self._get_block_hook()))
+                self.hook_handlers.append(
+                    block.register_forward_hook(self._get_block_hook()))
             if block_idx in self.layers_dict[VitExtractor.ATTN_KEY]:
-                self.hook_handlers.append(block.attn.attn_drop.register_forward_hook(self._get_attn_hook()))
+                self.hook_handlers.append(
+                    block.attn.attn_drop.register_forward_hook(self._get_attn_hook()))
             if block_idx in self.layers_dict[VitExtractor.QKV_KEY]:
-                self.hook_handlers.append(block.attn.qkv.register_forward_hook(self._get_qkv_hook()))
+                self.hook_handlers.append(
+                    block.attn.qkv.register_forward_hook(self._get_qkv_hook()))
             if block_idx in self.layers_dict[VitExtractor.PATCH_IMD_KEY]:
-                self.hook_handlers.append(block.attn.register_forward_hook(self._get_patch_imd_hook()))
+                self.hook_handlers.append(
+                    block.attn.register_forward_hook(self._get_patch_imd_hook()))
 
     def _clear_hooks(self):
         for handler in self.hook_handlers:
@@ -125,7 +136,8 @@ class VitExtractor:
         return feature
 
     def get_patch_size(self):
-        return 8 if "8" in self.model_name else 16
+        # return 8 if "8" in self.model_name else 16
+        return 8
 
     def get_width_patch_num(self, input_img_shape):
         b, c, h, w = input_img_shape
@@ -138,48 +150,56 @@ class VitExtractor:
         return h // patch_size
 
     def get_patch_num(self, input_img_shape):
-        patch_num = 1 + (self.get_height_patch_num(input_img_shape) * self.get_width_patch_num(input_img_shape))
+        patch_num = 1 + (self.get_height_patch_num(input_img_shape)
+                         * self.get_width_patch_num(input_img_shape))
         return patch_num
 
     def get_head_num(self):
-        if "dino" in self.model_name:
-            return 6 if "s" in self.model_name else 12
-        return 6 if "small" in self.model_name else 12
+        # if "dino" in self.model_name:
+        #     return 6 if "s" in self.model_name else 12
+        # return 6 if "small" in self.model_name else 12
+        return 6
 
     def get_embedding_dim(self):
         if "dino" in self.model_name:
             return 384 if "s" in self.model_name else 768
         return 384 if "small" in self.model_name else 768
+        return 384
 
     def get_queries_from_qkv(self, qkv, input_img_shape):
         patch_num = self.get_patch_num(input_img_shape)
         head_num = self.get_head_num()
         embedding_dim = self.get_embedding_dim()
-        q = qkv.reshape(patch_num, 3, head_num, embedding_dim // head_num).permute(1, 2, 0, 3)[0]
+        q = qkv.reshape(patch_num, 3, head_num, embedding_dim //
+                        head_num).permute(1, 2, 0, 3)[0]
         return q
 
     def get_keys_from_qkv(self, qkv, input_img_shape):
         patch_num = self.get_patch_num(input_img_shape)
         head_num = self.get_head_num()
         embedding_dim = self.get_embedding_dim()
-        k = qkv.reshape(patch_num, 3, head_num, embedding_dim // head_num).permute(1, 2, 0, 3)[1]
+        k = qkv.reshape(patch_num, 3, head_num, embedding_dim //
+                        head_num).permute(1, 2, 0, 3)[1]
         return k
 
     def get_values_from_qkv(self, qkv, input_img_shape):
         patch_num = self.get_patch_num(input_img_shape)
         head_num = self.get_head_num()
         embedding_dim = self.get_embedding_dim()
-        v = qkv.reshape(patch_num, 3, head_num, embedding_dim // head_num).permute(1, 2, 0, 3)[2]
+        v = qkv.reshape(patch_num, 3, head_num, embedding_dim //
+                        head_num).permute(1, 2, 0, 3)[2]
         return v
 
     def get_keys_from_input(self, input_img, layer_num):
         qkv_features = self.get_qkv_feature_from_input(input_img)[layer_num]
         keys = self.get_keys_from_qkv(qkv_features, input_img.shape)
         return keys
+
     def get_values_from_input(self, input_img, layer_num):
         qkv_features = self.get_qkv_feature_from_input(input_img)[layer_num]
         keys = self.get_values_from_qkv(qkv_features, input_img.shape)
         return keys
+
     def get_keys_self_sim_from_input(self, input_img, layer_num):
         keys = self.get_keys_from_input(input_img, layer_num=layer_num)
         h, t, d = keys.shape
